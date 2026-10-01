@@ -3,8 +3,8 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 from sqlalchemy import func, select
 
+from tests.conftest import fresh_db
 from trim.connectors.simulated import SimulatedConnector
-from trim.db import Database
 from trim.evaluate import Metrics, evaluate, evaluate_seed
 from trim.models import Alert
 from trim.services.anomaly import score_agents
@@ -21,8 +21,7 @@ def scenario():
 def loaded(scenario):
     conn = SimulatedConnector()
     load_into(scenario, conn)
-    db = Database("sqlite://")
-    db.create_all()
+    db = fresh_db()
     with db.session() as s:
         sync_inventory(s, conn, scenario.start, SyncReport())
     with db.session() as s:
@@ -98,8 +97,7 @@ def test_rules_fallback_with_little_history():
         for i in range(60)
     ]
     conn.add_activity(events)
-    db = Database("sqlite://")
-    db.create_all()
+    db = fresh_db()
     with db.session() as s:
         run_sync(s, conn, start + timedelta(days=6), 365)
         report = score_agents(s, start + timedelta(days=6), 3)

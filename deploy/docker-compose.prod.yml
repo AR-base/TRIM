@@ -1,0 +1,32 @@
+# Production overlay for a public server: HTTPS (Caddy), restart on failure/reboot, capped logs.
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d --build
+x-ops: &ops
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  db: *ops
+  api: *ops
+  worker: *ops
+  web:
+    <<: *ops
+    ports: !reset []          # only Caddy is reachable from outside
+
+  caddy:
+    <<: *ops
+    image: caddy:2-alpine
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      TRIM_DOMAIN: ${TRIM_DOMAIN:?set TRIM_DOMAIN in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # certificates: keep this volume
+      - caddy_config:/config
+    depends_on: [web]
+    networks: [frontend]
+
+volumes:
+  caddy_data:
+  caddy_config:

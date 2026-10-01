@@ -71,14 +71,11 @@ npm install
 npm run dev                                    # http://localhost:5173, sign in with the token
 ```
 
-## Run with Docker
+## Deploy
 
-```bash
-cp .env.example .env          # fill POSTGRES_PASSWORD, TRIM_API_TOKENS, TRIM_ENCRYPTION_KEY
-docker compose up --build -d
-docker compose run --rm api trim simulate     # load the test organisation
-open http://localhost:8080
-```
+On any Ubuntu server with a DNS name: `sudo ./deploy/setup.sh <your-domain>`. That one command gives you HTTPS, Postgres, a firewall and generated secrets. See **[DEPLOY.md](DEPLOY.md)** for hosting options (including free student credit), operations, backups and the security checklist.
+
+Local Docker run: `cp .env.example .env`, fill it in, then `docker compose up --build` → http://localhost:8080.
 
 ## Connecting a real Google Workspace test tenant
 
@@ -125,18 +122,19 @@ Two provider facts shape the product:
 ## Tests and quality
 
 ```bash
-cd backend && pytest --cov=trim          # 84 tests, 97% coverage
+cd backend && pytest --cov=trim          # 85 tests, 97% coverage (TRIM_TEST_DATABASE_URL=postgresql+psycopg://… runs them on Postgres)
 ruff check trim tests && bandit -c pyproject.toml -r trim
 cd frontend && npm run typecheck && npm test && npm run build   # 18 tests
 ```
 
-CI runs all of this, plus dependency audits (pip-audit, npm audit), a migration check, the model evaluation, and container builds.
+CI runs all of this on SQLite and PostgreSQL, plus dependency audits (pip-audit, npm audit), a migration check, the model evaluation, and container builds.
 
 ## Project layout
 
 ```
 backend/   trim/ (api, connectors, services, migrations), tests/, Dockerfile
 frontend/  src/ (pages, components, api client), nginx.conf, Dockerfile
+deploy/    setup.sh, docker-compose.prod.yml (Caddy HTTPS), Caddyfile
 docs/      screenshots/, evaluation.json
 .github/   workflows/ci.yml
 docker-compose.yml  .env.example

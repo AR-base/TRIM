@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -61,11 +62,24 @@ def seed_connector(conn: SimulatedConnector) -> None:
     conn.add_activity(events)
 
 
+# Set TRIM_TEST_DATABASE_URL (e.g. postgresql+psycopg://...) to run against a real server; default is SQLite.
+TEST_DB_URL = os.environ.get("TRIM_TEST_DATABASE_URL", "sqlite://")
+
+
+def fresh_db() -> Database:
+    db = Database(TEST_DB_URL)
+    if not TEST_DB_URL.startswith("sqlite"):
+        from trim.db import Base
+
+        Base.metadata.drop_all(db.engine)
+    db.create_all()
+    return db
+
+
 def build_world() -> World:
     conn = SimulatedConnector()
     seed_connector(conn)
-    db = Database("sqlite://")
-    db.create_all()
+    db = fresh_db()
     with db.session() as s:
         sync_inventory(s, conn, START, SyncReport())
     with db.session() as s:

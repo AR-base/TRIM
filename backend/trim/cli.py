@@ -88,14 +88,23 @@ def cmd_simulate(args: argparse.Namespace) -> int:
     if settings.connector != "simulated":
         print("simulate needs TRIM_CONNECTOR=simulated", file=sys.stderr)
         return 2
+    db = _db()
+    if args.reset:
+        # Only reachable with the simulated connector (checked above): wipes the demo, never real data.
+        from trim.db import Base
+
+        Base.metadata.drop_all(db.engine)
+    db.create_all()
+    with db.session() as s:
+        if not args.reset and s.scalar(select(Agent.id).limit(1)) is not None:
+            print("the database already holds a demo; rerun with --reset to replace it", file=sys.stderr)
+            return 2
+
     today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     start = today - timedelta(days=args.days)
     scenario = build_scenario(seed=args.seed, n_users=args.users, days=args.days, start=start)
     connector = SimulatedConnector(settings.sim_state_path)
     load_into(scenario, connector)
-
-    db = _db()
-    db.create_all()
     with db.session() as s:
         sync_inventory(s, connector, scenario.start, SyncReport())  # Trim was connected on day one
     now = utcnow()
@@ -216,6 +225,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--seed", type=int, default=7)
     s.add_argument("--users", type=int, default=40)
     s.add_argument("--days", type=int, default=28)
+    s.add_argument("--reset", action="store_true", help="delete the current demo data first (simulated only)")
     s.set_defaults(fn=cmd_simulate)
 
     sub.add_parser("sync", help="run one sync, expiry and scoring cycle").set_defaults(fn=cmd_sync)
