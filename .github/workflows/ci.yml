@@ -18,6 +18,16 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trim
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: trim
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U trim" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,6 +39,10 @@ jobs:
         run: ruff check trim tests && ruff format --check trim tests
       - name: Tests (coverage must stay above 80%)
         run: pytest --cov=trim --cov-report=term --cov-fail-under=80
+      - name: Tests on PostgreSQL (the production database)
+        run: pytest -o addopts="" -q
+        env:
+          TRIM_TEST_DATABASE_URL: postgresql+psycopg://trim:ci-only-password@localhost:5432/trim
       - name: Static security analysis
         run: bandit -q -c pyproject.toml -r trim
       - name: Dependency vulnerabilities
@@ -77,3 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t trim-api backend && docker build -t trim-web frontend
+      - name: Production compose file is valid
+        run: |
+          printf 'POSTGRES_PASSWORD=x\nTRIM_DOMAIN=ci.example.org\n' > .env
+          docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml config -q

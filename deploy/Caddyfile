@@ -1,0 +1,6 @@
+# Caddy terminates HTTPS and gets/renews the Let's Encrypt certificate automatically.
+# TRIM_DOMAIN comes from .env (e.g. trim-demo.francecentral.cloudapp.azure.com).
+{$TRIM_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:8080
+}

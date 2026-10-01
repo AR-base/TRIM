@@ -60,6 +60,27 @@ def test_simulate_refuses_real_connector(env, monkeypatch, capsys):
     assert cli.main(["simulate"]) == 2
 
 
+def test_simulate_twice_needs_reset_and_reset_rebuilds(env, capsys):
+    from sqlalchemy import func, select
+
+    from trim.models import Agent, Decision
+
+    assert cli.main(["simulate", "--seed", "4", "--users", "12", "--days", "20"]) == 0
+    db = Database(f"sqlite:///{env / 'trim.db'}")
+    with db.session() as s:
+        s.add(Decision(action="trim", agent_id=s.scalar(select(Agent.id)), actor="ana"))
+    sim_before = (env / "sim.json").read_bytes()
+
+    assert cli.main(["simulate", "--seed", "5"]) == 2  # refused...
+    assert (env / "sim.json").read_bytes() == sim_before  # ...and nothing was touched
+    assert "--reset" in capsys.readouterr().err
+
+    assert cli.main(["simulate", "--seed", "5", "--users", "12", "--days", "20", "--reset"]) == 0
+    with db.session() as s:
+        assert s.scalar(select(func.count(Decision.id))) == 0
+        assert s.scalar(select(func.count(Agent.id))) == 20
+
+
 def test_connect_stores_encrypted_credentials(env, monkeypatch, capsys):
     from trim.crypto import SecretBox
 
