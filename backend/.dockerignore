@@ -1,0 +1,10 @@
+**/__pycache__
+**/*.db
+**/*.db-*
+sim_state.json
+.env
+.venv
+.pytest_cache
+.ruff_cache
+.coverage
+tests

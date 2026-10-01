@@ -1,0 +1,165 @@
+{
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "per_seed": [
+    {
+      "seed": 1,
+      "agents": 20,
+      "events": 20073,
+      "granted_permissions": 385,
+      "removed_permissions": 194,
+      "removal": {
+        "tp": 194,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1.0,
+        "recall": 0.985,
+        "f1": 0.992
+      },
+      "anomaly": {
+        "tp": 16,
+        "fp": 1,
+        "fn": 2,
+        "precision": 0.941,
+        "recall": 0.889,
+        "f1": 0.914
+      },
+      "mode": "model"
+    },
+    {
+      "seed": 2,
+      "agents": 20,
+      "events": 17926,
+      "granted_permissions": 357,
+      "removed_permissions": 190,
+      "removal": {
+        "tp": 190,
+        "fp": 0,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.979,
+        "f1": 0.99
+      },
+      "anomaly": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 8,
+        "precision": 1.0,
+        "recall": 0.556,
+        "f1": 0.714
+      },
+      "mode": "model"
+    },
+    {
+      "seed": 3,
+      "agents": 20,
+      "events": 22504,
+      "granted_permissions": 426,
+      "removed_permissions": 218,
+      "removal": {
+        "tp": 218,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "anomaly": {
+        "tp": 17,
+        "fp": 2,
+        "fn": 1,
+        "precision": 0.895,
+        "recall": 0.944,
+        "f1": 0.919
+      },
+      "mode": "model"
+    },
+    {
+      "seed": 4,
+      "agents": 20,
+      "events": 20542,
+      "granted_permissions": 368,
+      "removed_permissions": 181,
+      "removal": {
+        "tp": 181,
+        "fp": 0,
+        "fn": 5,
+        "precision": 1.0,
+        "recall": 0.973,
+        "f1": 0.986
+      },
+      "anomaly": {
+        "tp": 14,
+        "fp": 2,
+        "fn": 4,
+        "precision": 0.875,
+        "recall": 0.778,
+        "f1": 0.824
+      },
+      "mode": "model"
+    },
+    {
+      "seed": 5,
+      "agents": 20,
+      "events": 20906,
+      "granted_permissions": 397,
+      "removed_permissions": 201,
+      "removal": {
+        "tp": 201,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "anomaly": {
+        "tp": 15,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1.0,
+        "recall": 0.833,
+        "f1": 0.909
+      },
+      "mode": "model"
+    }
+  ],
+  "removal": {
+    "tp": 984,
+    "fp": 0,
+    "fn": 12,
+    "precision": 1.0,
+    "recall": 0.988,
+    "f1": 0.994
+  },
+  "anomaly": {
+    "tp": 72,
+    "fp": 5,
+    "fn": 18,
+    "precision": 0.935,
+    "recall": 0.8,
+    "f1": 0.862
+  },
+  "anomaly_recall_by_attack": {
+    "slow_creep": {
+      "detected": 29,
+      "total": 45
+    },
+    "exfiltration": {
+      "detected": 15,
+      "total": 15
+    },
+    "goal_hijack": {
+      "detected": 15,
+      "total": 15
+    },
+    "off_hours": {
+      "detected": 13,
+      "total": 15
+    }
+  }
+}
