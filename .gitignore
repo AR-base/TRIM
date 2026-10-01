@@ -1,0 +1,13 @@
+.env
+*.db
+*.db-*
+sim_state.json
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+node_modules/
+dist/
+.DS_Store

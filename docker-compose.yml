@@ -1,0 +1,70 @@
+# docker compose up --build  ->  dashboard on http://localhost:8080
+# Secrets come from .env (copy .env.example); nothing secret is written in this file.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: trim
+      POSTGRES_USER: trim
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trim -d trim"]
+      interval: 5s
+      retries: 10
+    networks: [backend]
+
+  migrate:
+    build: ./backend
+    command: ["trim", "init-db"]
+    env_file: .env
+    environment: &trim_env
+      TRIM_ENV: prod
+      TRIM_DATABASE_URL: postgresql+psycopg://trim:${POSTGRES_PASSWORD}@db:5432/trim
+      TRIM_SIM_STATE_PATH: /data/sim_state.json
+    volumes: [simdata:/data]
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [backend]
+
+  api:
+    build: ./backend
+    env_file: .env
+    environment: *trim_env
+    volumes: [simdata:/data]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    networks: [backend, frontend]
+
+  worker:
+    build: ./backend
+    command: ["trim", "worker", "--interval", "900"]
+    env_file: .env
+    environment: *trim_env
+    volumes: [simdata:/data]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    networks: [backend]
+
+  web:
+    build: ./frontend
+    ports: ["127.0.0.1:8080:8080"]
+    read_only: true
+    tmpfs: [/tmp, /var/cache/nginx]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [api]
+    networks: [frontend]
+
+volumes:
+  pgdata:
+  simdata:
+
+networks:
+  backend:
+  frontend:
