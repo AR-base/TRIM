@@ -1,11 +1,26 @@
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 
 import { api, ApiError, tokenStore } from "../api";
 import { Mark } from "../components/Bits";
 import type { Me } from "../types";
+import "@fontsource-variable/schibsted-grotesk";
+import "@fontsource-variable/jetbrains-mono";
+import "./signin.css";
+
+/** One real-looking agent from the test organisation, used to show what Trim does before signing in. */
+const EXAMPLE = [
+  { what: "Read all email", scope: "gmail.readonly", calls: 1284 },
+  { what: "Write drafts and send email", scope: "gmail.compose", calls: 96 },
+  { what: "Permanently delete email", scope: "mail.google.com", calls: 0 },
+  { what: "Edit and share every Drive file", scope: "drive", calls: 0 },
+  { what: "Manage and share every calendar", scope: "calendar", calls: 0 },
+];
+const MAX_CALLS = Math.max(...EXAMPLE.map((r) => r.calls));
+const CUT_COUNT = EXAMPLE.filter((r) => r.calls === 0).length;
 
 export function SignIn({ onSignedIn }: { onSignedIn: (me: Me) => void }) {
   const [token, setToken] = useState("");
+  const [visible, setVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -36,52 +51,113 @@ export function SignIn({ onSignedIn }: { onSignedIn: (me: Me) => void }) {
   }
 
   return (
-    <div className="signin">
-      <div className="signin__panel">
+    <div className="login">
+      <section className="login__side">
         <div className="brand brand--large">
           <Mark />
           <span>trim</span>
         </div>
-        <p className="signin__lede">
-          Every AI agent gets the keys it actually uses, <em>and nothing more.</em>
-        </p>
-        <form onSubmit={submit} noValidate>
-          <label htmlFor="token">Access token</label>
-          <input
-            id="token"
-            type="password"
-            autoComplete="off"
-            spellCheck={false}
-            value={token}
-            onChange={(e) => {
-              setToken(e.target.value);
-              setError(null);
-            }}
-            placeholder="trim_…"
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? "token-error" : undefined}
-          />
-          {error && (
-            <p id="token-error" className="field-error">
-              {error}
+
+        <div className="login__main">
+          <h1 className="login__title">Every AI agent keeps only the access it uses.</h1>
+          <p className="login__lede">
+            Trim watches what each agent does with its permissions and removes the ones it never touches.
+          </p>
+
+          <form className="login__form" onSubmit={submit} noValidate>
+            <label htmlFor="token">Access token</label>
+            <div className={`login__field${error ? " login__field--invalid" : ""}`}>
+              <input
+                id="token"
+                type={visible ? "text" : "password"}
+                autoComplete="off"
+                spellCheck={false}
+                value={token}
+                onChange={(e) => {
+                  setToken(e.target.value);
+                  setError(null);
+                }}
+                placeholder="trim_…"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "token-error" : undefined}
+              />
+              <button
+                type="button"
+                className="login__reveal"
+                onClick={() => setVisible((v) => !v)}
+                aria-pressed={visible}
+                aria-controls="token"
+              >
+                {visible ? "Hide" : "Show"}
+              </button>
+            </div>
+            {error && (
+              <p id="token-error" className="field-error" role="alert">
+                {error}
+              </p>
+            )}
+            <button className="btn btn--ink login__submit" type="submit" disabled={busy}>
+              {busy ? "Checking…" : "Sign in"}
+            </button>
+          </form>
+        </div>
+
+        <p className="login__note">Your token stays in this browser tab and is forgotten when you close it.</p>
+      </section>
+
+      <section className="login__stage" aria-label="Example of Trim at work">
+        <figure className="ledger">
+          <figcaption className="ledger__head">
+            <span className="ledger__name">Inbox Copilot</span>
+            <span className="ledger__meta">Connected by 6 people, activity from the last 14 days</span>
+          </figcaption>
+
+          <ul className="ledger__rows">
+            {EXAMPLE.map((r, i) => {
+              const cut = r.calls === 0;
+              return (
+                <li
+                  key={r.scope}
+                  className={`ledger__row${cut ? " ledger__row--cut" : ""}`}
+                  style={{ "--i": i } as CSSProperties}
+                >
+                  <span className="ledger__what">
+                    <span className="ledger__label">
+                      <span className="ledger__text">{r.what}</span>
+                    </span>
+                    <code>{r.scope}</code>
+                  </span>
+                  {cut ? (
+                    <span className="ledger__never">Never used</span>
+                  ) : (
+                    <span className="ledger__use">
+                      <span
+                        className="ledger__bar"
+                        style={{ "--w": Math.max(0.06, r.calls / MAX_CALLS) } as CSSProperties}
+                      />
+                      <span className="ledger__calls">{r.calls.toLocaleString("en-GB")} calls</span>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="ledger__reach">
+            <p className="reach reach--before">
+              <span className="reach__label">Today</span>
+              Can delete all email, edit and share every Drive file, and manage every calendar.
             </p>
-          )}
-          <button className="btn btn--ink" type="submit" disabled={busy}>
-            {busy ? "Checking…" : "Sign in"}
-          </button>
-        </form>
-        <p className="signin__foot">
-          Create a token with <code>trim token create --name you --role admin</code>. It stays in this tab only.
-        </p>
-      </div>
-      <div className="signin__art" aria-hidden="true">
-        {["mail.full", "drive", "calendar", "contacts", "spreadsheets", "admin.directory.user"].map((s, i) => (
-          <div key={s} className={`signin__row signin__row--${i % 3}`}>
-            <span className="mono">{s}</span>
-            <span className="signin__cut" />
+            <p className="reach reach--after">
+              <span className="reach__label">After trim</span>
+              Can read all email, write drafts and send email.
+            </p>
           </div>
-        ))}
-      </div>
+        </figure>
+        <p className="login__caption">
+          An agent from the test organisation. Trim removed the {CUT_COUNT} permissions it never used.
+        </p>
+      </section>
     </div>
   );
 }
