@@ -56,6 +56,33 @@ jobs:
           name: evaluation
           path: backend/evaluation.json
 
+  package:
+    # Installs Trim exactly as the Docker image does (runtime dependencies only, no dev tools)
+    # and runs migrate, the demo and the API, so a missing runtime dependency fails here, not in production.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and install the wheel in a clean environment
+        run: |
+          python -m venv /tmp/prod
+          /tmp/prod/bin/pip install --upgrade pip
+          /tmp/prod/bin/pip wheel --no-deps --wheel-dir /tmp/wheels ./backend
+          /tmp/prod/bin/pip install /tmp/wheels/trim-*.whl
+      - name: Migrate, load demo, serve
+        working-directory: /tmp
+        env:
+          TRIM_ENV: prod
+          TRIM_DATABASE_URL: sqlite:////tmp/smoke.db
+          TRIM_SIM_STATE_PATH: /tmp/sim.json
+        run: |
+          /tmp/prod/bin/trim init-db
+          /tmp/prod/bin/trim simulate --users 15 --days 20 > /dev/null
+          /tmp/prod/bin/trim serve --port 8000 & sleep 5
+          curl -fsS http://127.0.0.1:8000/api/v1/health
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # One-command install of Trim on a fresh Ubuntu 22.04/24.04 server.
 # Run from the repository root:   sudo ./deploy/setup.sh <your-domain>
-# Safe to re-run: existing secrets in .env are kept, and the demo data is only loaded once.
+# Safe to re-run: existing secrets in .env are kept, the demo data is loaded only once, and the
+# admin token is kept in a root-only file until you confirm you saved it, so a failed run loses nothing.
 set -euo pipefail
 
 DOMAIN="${1:-}"
@@ -30,10 +31,8 @@ if command -v ufw >/dev/null 2>&1; then
   ufw --force enable >/dev/null
 fi
 
-FIRST_INSTALL=0
 if [[ ! -f .env ]]; then
   echo "==> Generating secrets into .env (readable by root only)"
-  FIRST_INSTALL=1
   read -r PGPW KEY TOKEN HASH < <(python3 - <<'PY'
 import base64, hashlib, secrets
 token = "trim_" + secrets.token_urlsafe(32)
@@ -42,6 +41,7 @@ print(secrets.token_urlsafe(32), base64.urlsafe_b64encode(secrets.token_bytes(32
 PY
 )
   umask 077
+  printf '%s\n' "${TOKEN}" > .admin-token
   cat > .env <<ENV
 POSTGRES_PASSWORD=${PGPW}
 TRIM_DOMAIN=${DOMAIN}
@@ -60,15 +60,22 @@ fi
 echo "==> Building and starting (first build takes a few minutes)"
 "${COMPOSE[@]}" up -d --build
 
-if [[ $FIRST_INSTALL -eq 1 ]]; then
-  echo "==> Loading the test organisation"
-  "${COMPOSE[@]}" run --rm api trim simulate >/dev/null
+echo "==> Loading the test organisation (skipped if it is already there)"
+set +e
+"${COMPOSE[@]}" run --rm -T api trim simulate >/dev/null 2>/tmp/trim-simulate.err
+SIM=$?
+set -e
+if [[ $SIM -ne 0 && $SIM -ne 2 ]]; then
+  cat /tmp/trim-simulate.err >&2
+  exit "$SIM"
 fi
 
 echo
 echo "Trim is starting at https://${DOMAIN}  (the certificate can take a minute on first start)"
-if [[ $FIRST_INSTALL -eq 1 ]]; then
+if [[ -f .admin-token ]]; then
   echo
-  echo "Admin sign-in token (shown ONCE, save it in your password manager):"
-  echo "  ${TOKEN}"
+  echo "Admin sign-in token (save it in your password manager):"
+  echo "  $(cat .admin-token)"
+  echo
+  echo "Once it is saved, delete the copy on this server:  sudo rm $(pwd)/.admin-token"
 fi
