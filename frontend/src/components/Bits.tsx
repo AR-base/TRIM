@@ -41,12 +41,12 @@ export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () 
   );
 }
 
+/** The Keeper's halo with its line of light: Trim's mark. */
 export function Mark() {
   return (
     <svg className="mark" viewBox="0 0 32 32" aria-hidden="true">
-      <path d="M5 16h10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M20 16h7" stroke="var(--cut)" strokeWidth="3" strokeLinecap="round" strokeDasharray="2 3" />
-      <path d="M17.5 8v16" stroke="var(--cut)" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="16" cy="16" r="12.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M9.5 16.5h13" stroke="var(--signal)" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   );
 }

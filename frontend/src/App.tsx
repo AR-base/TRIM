@@ -89,7 +89,7 @@ function Shell({ me, summary, onSignOut }: { me: Me; summary: Summary | null; on
       <aside className="side">
         <a className="brand" href="#/">
           <Mark />
-          <span>trim</span>
+          <span>Trim</span>
         </a>
         <nav aria-label="Main">
           {NAV.map((n) => {
