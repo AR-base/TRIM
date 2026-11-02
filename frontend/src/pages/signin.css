@@ -1,72 +1,114 @@
-/* Sign-in: a quiet form on the left, and on the right the product's one idea shown on a real agent —
-   permissions it never used are cut, once, as the page loads. Base styles are the final state, so
-   with reduced motion (animations off) the page simply shows the result. */
+/* Sign-in: the form on the left on its own dark ground, the Keeper on the right.
+   The still version of the character is the base state; the WebGL canvas replaces it once it draws. */
 
 .login {
-  /* the sign-in page has its own typefaces; the dashboard keeps the system stack */
-  --sans: "Schibsted Grotesk Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-family: var(--sans);
+  position: relative;
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(380px, 5fr) 7fr;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.login__cols {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  pointer-events: none;
+}
+
+.login__cols span {
+  border-left: 1px solid var(--rule);
+}
+
+.login__cols span:first-child {
+  border-left-color: transparent;
 }
 
 /* ---------- left: the form ---------- */
 
 .login__side {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 48px;
-  padding: 40px clamp(28px, 5vw, 72px);
+  padding: 36px clamp(28px, 5vw, 72px);
+  /* text sits on a solid ground so the halo never reaches it */
+  background: linear-gradient(90deg, var(--paper) 78%, color-mix(in srgb, var(--paper) 0%, transparent));
 }
 
 .login__main {
-  max-width: 420px;
+  max-width: 440px;
+}
+
+.login__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 26px;
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.login__eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: var(--signal);
 }
 
 .login__title {
-  margin: 0 0 16px;
-  font-size: clamp(32px, 3.3vw, 44px);
-  line-height: 1.06;
-  letter-spacing: -0.03em;
-  font-weight: 700;
+  margin: 0 0 20px;
+  font: 400 clamp(52px, 5.6vw, 84px) / 0.95 var(--display);
+  letter-spacing: -0.01em;
   text-wrap: balance;
+}
+
+.login__title em {
+  font-style: italic;
+  color: var(--ink-accent);
 }
 
 .login__lede {
   margin: 0 0 40px;
-  max-width: 36ch;
-  font-size: 17px;
-  line-height: 1.5;
+  max-width: 38ch;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--ink-2);
 }
 
 .login__form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .login__form label {
-  font-size: 14px;
-  font-weight: 600;
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .login__field {
   display: flex;
   align-items: stretch;
-  height: 48px;
+  height: 50px;
   border: 1px solid var(--rule-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .login__field:focus-within {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent);
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-soft);
 }
 
 .login__field--invalid,
@@ -79,11 +121,11 @@
   flex: 1;
   min-width: 0;
   border: 0;
+  outline: 0;
   background: transparent;
-  padding: 0 14px;
   color: var(--ink);
-  font: 15px var(--mono);
-  outline: none;
+  font: 400 14px/1 var(--mono);
+  padding: 0 16px;
 }
 
 .login__field input::placeholder {
@@ -94,303 +136,264 @@
   border: 0;
   border-left: 1px solid var(--rule);
   background: transparent;
+  color: var(--muted);
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   padding: 0 16px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
   cursor: pointer;
-  border-radius: 0 10px 10px 0;
 }
 
 .login__reveal:hover {
-  background: var(--sunk);
+  color: var(--ink);
 }
 
 .login__submit {
-  margin-top: 12px;
-  height: 48px;
-  border-radius: 10px;
-  font-size: 15px;
+  margin-top: 10px;
+  width: 100%;
 }
 
 .field-error {
-  margin: 2px 0 0;
-  font-size: 14px;
+  margin: 0;
+  font-size: 13px;
   color: var(--danger);
 }
 
 .login__note {
   margin: 0;
-  max-width: 42ch;
-  font-size: 13px;
+  max-width: 40ch;
+  font: 400 11px/1.6 var(--mono);
   color: var(--muted);
 }
 
-/* ---------- right: the example agent ---------- */
+/* ---------- right: the Keeper ---------- */
 
 .login__stage {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 18px;
-  padding: 48px clamp(24px, 5vw, 80px);
-  background: var(--sunk);
-  border-left: 1px solid var(--rule);
-}
-
-.ledger {
-  width: 100%;
-  max-width: 600px;
-  margin: 0;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: 14px;
-  box-shadow: 0 30px 60px -40px rgba(20, 20, 20, 0.45);
-  overflow: hidden;
-}
-
-.ledger__head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 4px 16px;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--rule);
-}
-
-.ledger__name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.ledger__meta {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.ledger__rows {
-  list-style: none;
-  margin: 0;
-  padding: 6px 24px;
-}
-
-.ledger__row {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px;
-  gap: 16px;
-  align-items: center;
-  padding: 13px 0;
-  border-top: 1px solid var(--rule);
+  z-index: 1;
+  min-height: 100vh;
 }
 
-.ledger__row:first-child {
-  border-top: 0;
+.keeper {
+  position: absolute;
+  inset: 0;
 }
 
-.ledger__what {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 15px;
-  font-weight: 550;
+.keeper__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.8s ease;
 }
 
-.ledger__what code {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--muted);
+.keeper--live .keeper__canvas {
+  opacity: 1;
 }
 
-.ledger__use {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.keeper__labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.ledger__bar {
-  height: 8px;
-  width: calc(var(--w) * 90px);
-  border-radius: 4px;
-  background: var(--ink);
-  transform-origin: left center;
-}
-
-.ledger__calls {
-  font-size: 13px;
-  color: var(--ink-2);
+.keeper__label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  padding: 5px 9px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: rgba(5, 6, 8, 0.72);
+  color: var(--ink);
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 
-.ledger__never {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--cut);
+.keeper__label--kept {
+  color: var(--ink-accent);
+  border-color: color-mix(in srgb, var(--signal) 60%, transparent);
+  box-shadow: 0 0 18px var(--signal-soft);
 }
 
-/* the cut: a vermilion line through every permission the agent never used */
-.ledger__row--cut .ledger__what {
-  color: var(--muted);
-}
-
-/* the line is drawn through the permission's name only, never over the "Never used" verdict. It is a
-   background on an inline span, so it follows the text when a long name wraps onto two lines. */
-.ledger__row--cut .ledger__text {
-  margin: 0 -3px;
-  padding: 0 3px;
-  background: linear-gradient(var(--cut), var(--cut)) no-repeat 0 58% / 100% 2px;
-}
-
-.ledger__reach {
-  display: grid;
-  gap: 12px;
-  padding: 18px 24px 22px;
-  background: var(--paper);
-  border-top: 1px solid var(--rule);
-}
-
-.reach {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 84px 1fr;
-  gap: 12px;
-  font-size: 15px;
-  line-height: 1.45;
-}
-
-.reach__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  padding-top: 1px;
-}
-
-.reach--before {
+.keeper__label--cut {
   color: var(--muted);
   text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--cut) 55%, transparent);
+  text-decoration-color: var(--cut);
 }
 
-.reach--after {
-  font-weight: 600;
-  color: var(--ink);
+/* still version: a CSS halo and bust, hidden once the canvas draws */
+.keeper__still {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(68%, 520px);
+  aspect-ratio: 1;
+  transform: translate(-44%, -50%);
+  transition: opacity 0.8s ease;
 }
 
-.reach--after .reach__label {
-  color: var(--cut);
+.keeper--live .keeper__still {
+  opacity: 0;
 }
 
-.login__caption {
+.keeper__ring {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  border: 3px solid #f2f4ff;
+  box-shadow: 0 0 26px rgba(255, 255, 255, 0.45), inset 0 0 18px rgba(255, 255, 255, 0.25);
+}
+
+.keeper__head {
+  position: absolute;
+  left: 31%;
+  top: 20%;
+  width: 38%;
+  height: 46%;
+  border-radius: 48% 48% 44% 44% / 52% 52% 48% 48%;
+  background: radial-gradient(70% 60% at 35% 30%, #34281e, #0f0d0f 70%);
+}
+
+.keeper__head::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 46%;
+  height: 3px;
+  border-radius: 3px;
+  background: #dfe8ff;
+  box-shadow: 0 0 14px #9fb6ff;
+}
+
+.keeper__body {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 70%;
+  height: 40%;
+  border-radius: 50% 50% 0 0 / 38% 38% 0 0;
+  background: radial-gradient(60% 70% at 40% 20%, #241b14, #0b0a0c 70%);
+}
+
+/* the example agent, as a quiet glass card under the character */
+.verdict {
+  position: absolute;
+  right: clamp(20px, 4vw, 56px);
+  bottom: 32px;
+  z-index: 2;
+  width: min(330px, calc(100% - 40px));
   margin: 0;
-  max-width: 600px;
-  width: 100%;
-  font-size: 13px;
+  padding: 16px 18px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: rgba(8, 9, 12, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.verdict__head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.verdict__name {
+  font: 400 20px/1.1 var(--display);
+}
+
+.verdict__meta {
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
-/* ---------- the one moment of motion: cut, then show the result ---------- */
-
-@media (prefers-reduced-motion: no-preference) {
-  .ledger__bar {
-    animation: grow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-    animation-delay: calc(0.25s + var(--i) * 0.08s);
-  }
-
-  .ledger__row--cut .ledger__text {
-    animation: cut 0.45s cubic-bezier(0.6, 0, 0.2, 1) both;
-    animation-delay: calc(0.9s + (var(--i) - 2) * 0.18s);
-  }
-
-  /* cut permissions start in full ink, then dim as the line passes */
-  .ledger__row--cut .ledger__what {
-    animation: dim 0.3s ease both;
-    animation-delay: calc(1.15s + (var(--i) - 2) * 0.18s);
-  }
-
-  .ledger__never {
-    animation: appear 0.3s ease both;
-    animation-delay: calc(1.15s + (var(--i) - 2) * 0.18s);
-  }
-
-  .reach--before {
-    animation: strike 0.4s ease both;
-    animation-delay: 1.75s;
-  }
-
-  .reach--after {
-    animation: reveal 0.5s ease both;
-    animation-delay: 2s;
-  }
+.verdict__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-@keyframes grow {
-  from {
-    transform: scaleX(0);
-  }
+.verdict__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--rule);
+  font-size: 12.5px;
 }
 
-@keyframes cut {
-  from {
-    background-size: 0% 2px;
-  }
+.verdict__what {
+  color: var(--ink-2);
 }
 
-@keyframes dim {
-  from {
-    color: var(--ink);
-  }
+.verdict__calls {
+  flex: none;
+  font: 400 11px/1.5 var(--mono);
+  color: var(--ink-accent);
+  font-variant-numeric: tabular-nums;
 }
 
-@keyframes appear {
-  from {
-    opacity: 0;
-  }
+.verdict__row--cut .verdict__what {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--cut);
 }
 
-@keyframes strike {
-  from {
-    color: var(--ink);
-    text-decoration-color: transparent;
-  }
+.verdict__row--cut .verdict__calls {
+  color: var(--cut);
 }
 
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+.verdict__foot {
+  margin: 10px 0 0;
+  font: 400 10.5px/1.5 var(--mono);
+  color: var(--muted);
 }
 
-/* ---------- smaller screens: form first, example below ---------- */
+/* ---------- narrow screens: the Keeper on top, the form below ---------- */
 
 @media (max-width: 900px) {
   .login {
     grid-template-columns: 1fr;
   }
-  .login__side {
-    gap: 36px;
-    padding: 28px 20px 40px;
+  .login__cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .login__cols span:nth-child(n + 4) {
+    display: none;
   }
   .login__stage {
-    border-left: 0;
-    border-top: 1px solid var(--rule);
-    padding: 32px 16px 40px;
+    order: -1;
+    min-height: 52vh;
   }
-  .ledger__head,
-  .ledger__rows,
-  .ledger__reach {
-    padding-left: 16px;
-    padding-right: 16px;
+  .login__side {
+    background: linear-gradient(transparent, var(--paper) 40px);
+    padding: 8px 16px 40px;
+    gap: 32px;
   }
-  .ledger__row {
-    grid-template-columns: minmax(0, 1fr) auto;
+  .login__side .brand {
+    display: none;
   }
-  .reach {
-    grid-template-columns: 1fr;
-    gap: 2px;
+  .verdict {
+    display: none;
+  }
+  .keeper__still {
+    width: min(72%, 360px);
+    transform: translate(-50%, -48%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keeper__canvas,
+  .keeper__still {
+    transition: none;
   }
 }

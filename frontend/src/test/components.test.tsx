@@ -64,6 +64,14 @@ describe("StateBadge", () => {
 });
 
 describe("SignIn", () => {
+  it("shows the still Keeper and the example agent when WebGL is unavailable", () => {
+    const { container } = render(<SignIn onSignedIn={() => {}} />);
+    expect(container.querySelector(".keeper__still")).toBeTruthy();
+    expect(container.querySelector(".keeper--live")).toBeNull();
+    expect(screen.getAllByText("Never used")).toHaveLength(3);
+    expect(screen.getByText("Trim removed the 3 permissions it never used.")).toBeTruthy();
+  });
+
   it("asks for a token before calling the API", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<SignIn onSignedIn={() => {}} />);

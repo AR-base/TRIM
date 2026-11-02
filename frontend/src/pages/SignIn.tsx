@@ -1,10 +1,8 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { api, ApiError, tokenStore } from "../api";
 import { Mark } from "../components/Bits";
 import type { Me } from "../types";
-import "@fontsource-variable/schibsted-grotesk";
-import "@fontsource-variable/jetbrains-mono";
 import "./signin.css";
 
 /** One real-looking agent from the test organisation, used to show what Trim does before signing in. */
@@ -15,8 +13,11 @@ const EXAMPLE = [
   { what: "Edit and share every Drive file", scope: "drive", calls: 0 },
   { what: "Manage and share every calendar", scope: "calendar", calls: 0 },
 ];
-const MAX_CALLS = Math.max(...EXAMPLE.map((r) => r.calls));
 const CUT_COUNT = EXAMPLE.filter((r) => r.calls === 0).length;
+
+function hasWebGL(): boolean {
+  return typeof window !== "undefined" && ("WebGL2RenderingContext" in window || "WebGLRenderingContext" in window);
+}
 
 export function SignIn({ onSignedIn }: { onSignedIn: (me: Me) => void }) {
   const [token, setToken] = useState("");
@@ -52,16 +53,27 @@ export function SignIn({ onSignedIn }: { onSignedIn: (me: Me) => void }) {
 
   return (
     <div className="login">
+      <div className="login__cols" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
+
       <section className="login__side">
         <div className="brand brand--large">
           <Mark />
-          <span>trim</span>
+          <span>Trim</span>
         </div>
 
         <div className="login__main">
-          <h1 className="login__title">Every AI agent keeps only the access it uses.</h1>
+          <p className="login__eyebrow">Least privilege for AI agents</p>
+          <h1 className="login__title">
+            Keeper of the <em>keys</em>
+          </h1>
           <p className="login__lede">
-            Trim watches what each agent does with its permissions and removes the ones it never touches.
+            Trim watches what every AI agent does with its permissions and takes back the ones it never touches.
           </p>
 
           <form className="login__form" onSubmit={submit} noValidate>
@@ -96,7 +108,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: (me: Me) => void }) {
                 {error}
               </p>
             )}
-            <button className="btn btn--ink login__submit" type="submit" disabled={busy}>
+            <button className="btn btn--ink btn--lg login__submit" type="submit" disabled={busy}>
               {busy ? "Checking…" : "Sign in"}
             </button>
           </form>
@@ -106,58 +118,66 @@ export function SignIn({ onSignedIn }: { onSignedIn: (me: Me) => void }) {
       </section>
 
       <section className="login__stage" aria-label="Example of Trim at work">
-        <figure className="ledger">
-          <figcaption className="ledger__head">
-            <span className="ledger__name">Inbox Copilot</span>
-            <span className="ledger__meta">Connected by 6 people, activity from the last 14 days</span>
+        <Keeper />
+        <figure className="verdict">
+          <figcaption className="verdict__head">
+            <span className="verdict__name">Inbox Copilot</span>
+            <span className="verdict__meta">6 people · last 14 days</span>
           </figcaption>
-
-          <ul className="ledger__rows">
-            {EXAMPLE.map((r, i) => {
-              const cut = r.calls === 0;
-              return (
-                <li
-                  key={r.scope}
-                  className={`ledger__row${cut ? " ledger__row--cut" : ""}`}
-                  style={{ "--i": i } as CSSProperties}
-                >
-                  <span className="ledger__what">
-                    <span className="ledger__label">
-                      <span className="ledger__text">{r.what}</span>
-                    </span>
-                    <code>{r.scope}</code>
-                  </span>
-                  {cut ? (
-                    <span className="ledger__never">Never used</span>
-                  ) : (
-                    <span className="ledger__use">
-                      <span
-                        className="ledger__bar"
-                        style={{ "--w": Math.max(0.06, r.calls / MAX_CALLS) } as CSSProperties}
-                      />
-                      <span className="ledger__calls">{r.calls.toLocaleString("en-GB")} calls</span>
-                    </span>
-                  )}
-                </li>
-              );
-            })}
+          <ul className="verdict__rows">
+            {EXAMPLE.map((r) => (
+              <li key={r.scope} className={`verdict__row${r.calls === 0 ? " verdict__row--cut" : ""}`}>
+                <span className="verdict__what">{r.what}</span>
+                <span className="verdict__calls">{r.calls === 0 ? "Never used" : `${r.calls.toLocaleString("en-GB")} calls`}</span>
+              </li>
+            ))}
           </ul>
-
-          <div className="ledger__reach">
-            <p className="reach reach--before">
-              <span className="reach__label">Today</span>
-              Can delete all email, edit and share every Drive file, and manage every calendar.
-            </p>
-            <p className="reach reach--after">
-              <span className="reach__label">After trim</span>
-              Can read all email, write drafts and send email.
-            </p>
-          </div>
+          <p className="verdict__foot">Trim removed the {CUT_COUNT} permissions it never used.</p>
         </figure>
-        <p className="login__caption">
-          An agent from the test organisation. Trim removed the {CUT_COUNT} permissions it never used.
-        </p>
       </section>
+    </div>
+  );
+}
+
+/** The 3D character. Shows a still version until WebGL has drawn, and stays on it without WebGL. */
+function Keeper() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const labelsRef = useRef<HTMLDivElement>(null);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const labels = labelsRef.current;
+    if (!canvas || !labels || !hasWebGL()) return;
+    let dispose: (() => void) | undefined;
+    let cancelled = false;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    import("../stage/keeper")
+      .then(({ mountKeeper }) => {
+        if (cancelled) return;
+        dispose = mountKeeper(canvas, labels, {
+          keys: EXAMPLE.map((r) => ({ scope: r.scope, kept: r.calls > 0 })),
+          reducedMotion,
+          onReady: () => setLive(true),
+          onLost: () => setLive(false),
+        });
+      })
+      .catch(() => setLive(false));
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, []);
+
+  return (
+    <div className={`keeper${live ? " keeper--live" : ""}`} aria-hidden="true">
+      <div className="keeper__still">
+        <i className="keeper__ring" />
+        <i className="keeper__body" />
+        <i className="keeper__head" />
+      </div>
+      <canvas ref={canvasRef} className="keeper__canvas" />
+      <div ref={labelsRef} className="keeper__labels" />
     </div>
   );
 }
