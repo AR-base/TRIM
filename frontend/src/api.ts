@@ -9,6 +9,7 @@ import type {
   RequestView,
   Summary,
   TrimAllResult,
+  SyncResult,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -115,7 +116,7 @@ export function createClient(fetcher: Fetcher = (...a) => fetch(...a), getToken 
     requests: (status?: string) => request<RequestView[]>("GET", `/requests${q({ status })}`),
     decide: (id: number, choice: "allow_once" | "allow_always" | "deny", minutes?: number) =>
       request<RequestView>("POST", `/requests/${id}/decide`, minutes ? { choice, minutes } : { choice }),
-    sync: () => request<Record<string, unknown>>("POST", "/sync"),
+    sync: () => request<SyncResult>("POST", "/sync"),
   };
 }
 

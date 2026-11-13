@@ -116,6 +116,8 @@ export interface Summary {
   open_alerts: number;
   pending_requests: number;
   last_sync: string | null;
+  sync_interval_minutes: number;
+  lookback_hours: number;
   provider: string;
   can_narrow: boolean;
   can_restore: boolean;
@@ -135,4 +137,16 @@ export interface Capability {
 export interface TrimAllResult {
   trimmed: { agent_id: number; decision_id: number }[];
   skipped: { agent_id: number; error: string; detail: string }[];
+}
+
+export interface SyncResult {
+  sync: {
+    users: number;
+    agents_new: number;
+    grants_active: number;
+    grants_removed: number;
+    events_new: number;
+    errors: string[];
+  };
+  alerts_created: number;
 }

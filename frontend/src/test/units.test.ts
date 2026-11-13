@@ -84,3 +84,19 @@ describe("api client", () => {
     await expect(html.summary()).rejects.toMatchObject({ code: "http_502", status: 502 });
   });
 });
+
+describe("source helpers", () => {
+  it("names the provider in plain words", async () => {
+    const { providerName } = await import("../components/Source");
+    expect(providerName("google")).toBe("Google Workspace");
+    expect(providerName("simulated")).toContain("simulated");
+  });
+
+  it("says when the next sync is due", async () => {
+    const { nextSync } = await import("../components/Source");
+    const now = new Date("2026-11-13T09:00:00Z");
+    expect(nextSync({ last_sync: "2026-11-13T08:55:00Z", sync_interval_minutes: 15 }, now)).toBe("in 10 minutes");
+    expect(nextSync({ last_sync: "2026-11-13T08:00:00Z", sync_interval_minutes: 15 }, now)).toBe("any moment now");
+    expect(nextSync({ last_sync: null, sync_interval_minutes: 15 }, now)).toBe("at the next worker cycle");
+  });
+});

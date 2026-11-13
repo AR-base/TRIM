@@ -163,7 +163,8 @@ def cmd_worker(args: argparse.Namespace) -> int:
 
     signal.signal(signal.SIGTERM, _stop)
     signal.signal(signal.SIGINT, _stop)
-    log.info("worker started, interval %ss", args.interval)
+    interval = args.interval if args.interval is not None else settings.sync_interval_minutes * 60
+    log.info("worker started, interval %ss", interval)
     while not stop["now"]:
         try:
             with db.session() as s:
@@ -179,7 +180,7 @@ def cmd_worker(args: argparse.Namespace) -> int:
             log.info("cycle done: %s", json.dumps(report.__dict__, default=str))
         except Exception:
             log.exception("cycle failed; will retry next interval")
-        for _ in range(args.interval):
+        for _ in range(interval):
             if stop["now"]:
                 break
             time.sleep(1)
@@ -231,7 +232,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("sync", help="run one sync, expiry and scoring cycle").set_defaults(fn=cmd_sync)
 
     w = sub.add_parser("worker", help="run cycles forever")
-    w.add_argument("--interval", type=int, default=900)
+    w.add_argument("--interval", type=int, default=None, help="seconds between cycles (default: sync_interval_minutes)")
     w.set_defaults(fn=cmd_worker)
 
     e = sub.add_parser("evaluate", help="measure the models on simulated data")

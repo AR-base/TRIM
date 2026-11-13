@@ -1,13 +1,14 @@
 import { useSession } from "../App";
 import { ApiError } from "../api";
 import { Empty, ErrorNote } from "../components/Bits";
+import { SyncButton } from "../components/Source";
 import { useToast } from "../components/Toast";
 import { ACTION_LABEL, plural, relativeTime } from "../format";
 import { href } from "../router";
 import { useLoad } from "../useLoad";
 
 export function HistoryPage() {
-  const { api, me, refreshSummary } = useSession();
+  const { api, me, summary, refreshSummary } = useSession();
   const toast = useToast();
   const decisions = useLoad(() => api.decisions(), [api]);
 
@@ -23,9 +24,16 @@ export function HistoryPage() {
 
   return (
     <div className="page">
-      <header className="pagehead">
-        <p className="eyebrow">History</p>
-        <h1>Every change Trim made, and who approved it</h1>
+      <header className="pagehead pagehead--row">
+        <div>
+          <p className="eyebrow">History</p>
+          <h1>Every change Trim made, and who approved it</h1>
+          <p className="muted">
+            A change is written here the moment it is applied at the provider. Google's own confirmation, and any new activity,
+            arrives with the next sync{summary ? ` (every ${summary.sync_interval_minutes} minutes, last ${relativeTime(summary.last_sync)})` : ""}.
+          </p>
+        </div>
+        <SyncButton onDone={decisions.refresh} />
       </header>
       {decisions.error && <ErrorNote message={decisions.error.message} onRetry={decisions.refresh} />}
       <ol className="timeline">
