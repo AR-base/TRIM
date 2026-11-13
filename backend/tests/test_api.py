@@ -92,6 +92,7 @@ def test_summary_and_inventory(client):
     s = client.get(f"{API}/summary", headers=auth()).json()
     assert s["agents"] == 2 and s["users"] == 3 and s["by_state"]["ready"] == 2
     assert s["provider"] == "simulated" and s["can_restore"]
+    assert s["sync_interval_minutes"] == 15 and s["lookback_hours"] == 72
     agents = client.get(f"{API}/agents", headers=auth()).json()
     mail = next(a for a in agents if a["client_id"] == "mailbot")
     assert mail["reach"].startswith("Can read, send and permanently delete all email")

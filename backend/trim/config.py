@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     baseline_days: int = Field(default=14, ge=3, le=180)
     # Audit logs arrive late; each sync re-reads this far back (duplicates are ignored by event id).
     activity_lookback_hours: int = Field(default=72, ge=0, le=24 * 30)
+    # How often the worker syncs; reported to the dashboard so it can say when the next check is due.
+    sync_interval_minutes: int = Field(default=15, ge=1, le=24 * 60)
     activity_retention_days: int = Field(default=90, ge=7, le=3650)
     allow_once_default_minutes: int = Field(default=60, ge=5, le=24 * 60)
 

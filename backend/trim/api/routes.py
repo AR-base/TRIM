@@ -76,6 +76,8 @@ def summary(db: Session = Depends(session), c: AppContext = Depends(ctx), t: dat
         )
         or 0,
         last_sync=cursor.last_run_at if cursor else None,
+        sync_interval_minutes=c.settings.sync_interval_minutes,
+        lookback_hours=c.settings.activity_lookback_hours,
         provider=c.connector.provider,
         can_narrow=c.connector.capabilities.narrow_scopes,
         can_restore=c.connector.capabilities.restore,

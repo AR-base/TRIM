@@ -4,6 +4,7 @@ import { useSession } from "../App";
 import { ApiError } from "../api";
 import { Empty, ErrorNote, RiskDots, StateBadge } from "../components/Bits";
 import { Confirm } from "../components/Confirm";
+import { ConnectionPanel } from "../components/Source";
 import { CountStrip } from "../components/Strip";
 import { useToast } from "../components/Toast";
 import { plural, relativeTime, shortDate, STATE_LABEL } from "../format";
@@ -74,6 +75,8 @@ export function OverviewPage() {
         <Stat value={summary.users} label="people have connected agents" />
         <Stat value={summary.active_grants} label="active grants across the organisation" />
       </section>
+
+      <ConnectionPanel summary={summary} onSynced={() => Promise.all([agents.refresh(), alerts.refresh(), requests.refresh()])} />
 
       <section className="panel">
         <h2 className="panel__title">Where every agent stands</h2>

@@ -5,6 +5,7 @@ import { ApiError } from "../api";
 import { ActivityBars } from "../components/ActivityBars";
 import { Empty, ErrorNote, RiskDots, StateBadge } from "../components/Bits";
 import { Confirm } from "../components/Confirm";
+import { AgentSource } from "../components/Source";
 import { PermissionStrip } from "../components/Strip";
 import { useToast } from "../components/Toast";
 import { ACTION_LABEL, plural, relativeTime, riskLabel, shortDate } from "../format";
@@ -15,7 +16,7 @@ import { useLoad } from "../useLoad";
 type Dialog = "trim" | "suspend" | null;
 
 export function AgentDetailPage({ id }: { id: number }) {
-  const { api, me, refreshSummary } = useSession();
+  const { api, me, summary, refreshSummary } = useSession();
   const toast = useToast();
   const agent = useLoad(() => api.agent(id), [api, id]);
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -120,6 +121,8 @@ export function AgentDetailPage({ id }: { id: number }) {
           </div>
         )}
       </section>
+
+      <AgentSource agent={a} provider={summary?.provider ?? "google"} />
 
       <section className="panel">
         <div className="panel__row">

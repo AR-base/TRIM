@@ -167,6 +167,8 @@ class Summary(BaseModel):
     open_alerts: int
     pending_requests: int
     last_sync: datetime | None
+    sync_interval_minutes: int
+    lookback_hours: int
     provider: str
     can_narrow: bool
     can_restore: bool
