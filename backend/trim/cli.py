@@ -232,7 +232,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("sync", help="run one sync, expiry and scoring cycle").set_defaults(fn=cmd_sync)
 
     w = sub.add_parser("worker", help="run cycles forever")
-    w.add_argument("--interval", type=int, default=None, help="seconds between cycles (default: TRIM sync_interval_minutes)")
+    w.add_argument("--interval", type=int, default=None, help="seconds between cycles (default: sync_interval_minutes)")
     w.set_defaults(fn=cmd_worker)
 
     e = sub.add_parser("evaluate", help="measure the models on simulated data")
